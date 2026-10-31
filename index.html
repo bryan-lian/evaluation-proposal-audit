@@ -1,0 +1,932 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Evaluation Proposal Audit</title>
+<style>
+/* Layout: single column of five pass cards, each a stack of checkable prompts, with a live findings panel at the end. */
+:root {
+  --paper: #FBF8F3;
+  --card: #FFFFFF;
+  --ink: #1A1A1C;
+  --ink-soft: #5B544E;
+  --ink-faint: #8C837B;
+  --indigo: #575DA1;
+  --indigo-deep: #494E87;
+  --rust: #C6541C;
+  --peach: #EEA76F;
+  --sky: #B6D4DF;
+  --sage: #E6EDCE;
+  --border: #E8E0D6;
+  --border-firm: #D6CCBF;
+  --wash: #F3EEE7;
+  --ok-bg: #E6EDCE;
+  --ok-fg: #4A5520;
+  --gap-bg: #DCE9EF;
+  --gap-fg: #2F5B6B;
+  --flag-bg: #F7E0D2;
+  --flag-fg: #9A4214;
+  --shadow: 0 1px 2px rgba(60,45,30,.05), 0 6px 18px rgba(60,45,30,.06);
+  --shadow-lift: 0 2px 4px rgba(60,45,30,.07), 0 12px 28px rgba(60,45,30,.09);
+  --radius: 26px;
+  --radius-sm: 14px;
+  --font: "Avenir Next", "Segoe UI", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #17140F;
+    --card: #221E19;
+    --ink: #F4EEE6;
+    --ink-soft: #BCB1A5;
+    --ink-faint: #8F8478;
+    --indigo: #9298DD;
+    --indigo-deep: #AAAFEA;
+    --rust: #EF8450;
+    --peach: #D99A68;
+    --sky: #8FB9C7;
+    --sage: #C3CFA4;
+    --border: #352F28;
+    --border-firm: #4A423A;
+    --wash: #2B251F;
+    --ok-bg: #2F3A1C;
+    --ok-fg: #C8D79C;
+    --gap-bg: #1E3741;
+    --gap-fg: #A6CCD9;
+    --flag-bg: #432015;
+    --flag-fg: #F0A97E;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.28);
+    --shadow-lift: 0 2px 4px rgba(0,0,0,.35), 0 12px 28px rgba(0,0,0,.34);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #17140F;
+  --card: #221E19;
+  --ink: #F4EEE6;
+  --ink-soft: #BCB1A5;
+  --ink-faint: #8F8478;
+  --indigo: #9298DD;
+  --indigo-deep: #AAAFEA;
+  --rust: #EF8450;
+  --peach: #D99A68;
+  --sky: #8FB9C7;
+  --sage: #C3CFA4;
+  --border: #352F28;
+  --border-firm: #4A423A;
+  --wash: #2B251F;
+  --ok-bg: #2F3A1C;
+  --ok-fg: #C8D79C;
+  --gap-bg: #1E3741;
+  --gap-fg: #A6CCD9;
+  --flag-bg: #432015;
+  --flag-fg: #F0A97E;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.28);
+  --shadow-lift: 0 2px 4px rgba(0,0,0,.35), 0 12px 28px rgba(0,0,0,.34);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font);
+  font-weight: 300;
+  line-height: 1.6;
+  margin: 0;
+}
+.wrap {
+  max-width: 880px;
+  margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 40px 72px;
+}
+
+/* ---- header ---- */
+.eyebrow {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  margin: 0 0 10px;
+}
+h1 {
+  font-weight: 700;
+  font-size: clamp(30px, 6vw, 42px);
+  line-height: 1.12;
+  letter-spacing: -.02em;
+  margin: 0 0 12px;
+  text-wrap: balance;
+}
+.lede {
+  font-size: 16px;
+  color: var(--ink-soft);
+  max-width: 60ch;
+  margin: 0 0 28px;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.meta label {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1 1 220px;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.meta input {
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 300;
+  color: var(--ink);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 18px;
+  min-width: 0;
+  text-transform: none;
+  letter-spacing: normal;
+}
+.meta input:focus-visible {
+  outline: none;
+  border-color: var(--indigo);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--indigo) 25%, transparent);
+}
+
+/* ---- legend ---- */
+.legend {
+  background: var(--wash);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 16px 20px;
+  margin-bottom: 36px;
+  display: grid;
+  gap: 10px;
+}
+.legend h2 {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0;
+}
+.legend-row {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  font-size: 14px;
+  color: var(--ink-soft);
+}
+.legend .tag { flex: 0 0 auto; }
+
+.tag {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  padding: 3px 11px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.tag.ok   { background: var(--ok-bg);   color: var(--ok-fg); }
+.tag.gap  { background: var(--gap-bg);  color: var(--gap-fg); }
+.tag.flag { background: var(--flag-bg); color: var(--flag-fg); }
+
+/* ---- pass cards ---- */
+.pass {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 24px;
+}
+.accent { height: 6px; }
+.pass-head {
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+.pass-head > div { min-width: 0; flex: 1 1 320px; }
+.pass-n {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin: 0 0 4px;
+}
+.pass h2 {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  margin: 0 0 6px;
+  line-height: 1.25;
+}
+.pass .source {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin: 0 0 8px;
+}
+.pass .aim {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0;
+  max-width: 56ch;
+}
+.count {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-faint);
+  font-variant-numeric: tabular-nums;
+  background: var(--wash);
+  border-radius: 999px;
+  padding: 5px 14px;
+  flex: 0 0 auto;
+  align-self: flex-start;
+}
+
+/* ---- items ---- */
+.item {
+  padding: 16px 26px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 18px;
+  align-items: start;
+}
+.item:last-child { border-bottom: none; }
+.item.answered { background: color-mix(in srgb, var(--wash) 45%, transparent); }
+.q {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0 0 3px;
+  line-height: 1.45;
+}
+.hint {
+  font-size: 13.5px;
+  color: var(--ink-faint);
+  margin: 0;
+  line-height: 1.5;
+}
+.states {
+  display: flex;
+  gap: 5px;
+  flex: 0 0 auto;
+}
+.states button {
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border-firm);
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease, border-color .15s ease, transform .1s ease;
+}
+.states button:hover { background: var(--wash); color: var(--ink-soft); }
+.states button:active { transform: scale(.97); }
+.states button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--indigo) 30%, transparent);
+}
+.states button[aria-pressed="true"] { border-color: transparent; }
+.states button[data-v="ok"][aria-pressed="true"]   { background: var(--ok-bg);   color: var(--ok-fg); }
+.states button[data-v="gap"][aria-pressed="true"]  { background: var(--gap-bg);  color: var(--gap-fg); }
+.states button[data-v="flag"][aria-pressed="true"] { background: var(--flag-bg); color: var(--flag-fg); }
+
+.note {
+  grid-column: 1 / -1;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 300;
+  color: var(--ink);
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border-firm);
+  padding: 6px 2px;
+  width: 100%;
+  min-width: 0;
+}
+.note::placeholder { color: var(--ink-faint); }
+.note:focus-visible {
+  outline: none;
+  border-bottom-color: var(--indigo);
+  background: var(--wash);
+  border-radius: 6px 6px 0 0;
+  padding-inline: 8px;
+}
+
+/* ---- findings ---- */
+.findings {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lift);
+  padding: 26px;
+  margin-top: 40px;
+}
+.findings h2 {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -.01em;
+  margin: 0 0 6px;
+}
+.findings .aim {
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0 0 20px;
+  max-width: 56ch;
+}
+.tally {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.tally span {
+  font-size: 13px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--wash);
+  color: var(--ink-soft);
+}
+#out {
+  font-size: 14px;
+  line-height: 1.6;
+}
+#out .empty { color: var(--ink-faint); margin: 0; }
+#out .grp {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  margin: 18px 0 8px;
+}
+#out .grp:first-child { margin-top: 0; }
+#out ul { margin: 0; padding-left: 0; list-style: none; display: grid; gap: 10px; }
+#out li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: baseline;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+#out li:last-child { border-bottom: none; padding-bottom: 0; }
+#out .txt { min-width: 0; }
+#out .n { display: block; color: var(--ink-soft); font-size: 13.5px; margin-top: 2px; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+.btn {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 11px 24px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background .15s ease, transform .1s ease, box-shadow .15s ease;
+}
+.btn-primary { background: var(--indigo); color: #fff; }
+.btn-primary:hover { background: var(--indigo-deep); }
+.btn-ghost { background: transparent; color: var(--ink-soft); border-color: var(--border-firm); }
+.btn-ghost:hover { background: var(--wash); }
+.btn:active { transform: scale(.98); }
+.btn:focus-visible { outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--indigo) 30%, transparent); }
+
+.foot {
+  font-size: 13px;
+  color: var(--ink-faint);
+  margin-top: 32px;
+  max-width: 62ch;
+}
+
+@media (max-width: 560px) {
+  .item { grid-template-columns: 1fr; }
+  .states { order: 2; }
+  .pass-head, .item { padding-inline: 20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}
+</style>
+<style>
+.steps{list-style:none;padding:0;margin:0 0 28px;display:grid;gap:8px}
+.steps li{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;color:var(--ink-soft)}
+.steps b{color:var(--ink);font-weight:600}
+.warn{background:var(--flag-bg);color:var(--flag-fg);border-radius:var(--radius-sm);padding:12px 16px;font-size:14px;margin:0 0 20px}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 28px}
+.toolbar .btn{padding:8px 16px;font-size:13px}
+textarea.note{resize:vertical;min-height:2.4em;line-height:1.5}
+.pad{padding:18px 26px}
+.pad h3{margin:0 0 6px;font-size:17px}
+.pad label{display:block;font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--ink-faint);margin:14px 0 4px}
+.pad textarea,.pad input,.pad select{width:100%;font-family:inherit;font-size:14px;color:var(--ink);background:var(--paper);border:1px solid var(--border-firm);border-radius:10px;padding:8px 12px}
+.pad textarea{min-height:70px;resize:vertical}
+.pad :focus-visible{outline:2px solid var(--indigo);outline-offset:1px}
+.cite{font-size:13px;background:var(--wash);border-radius:10px;padding:10px 12px;white-space:pre-wrap;word-break:break-word}
+.sec-h{font-size:24px;font-weight:700;margin:36px 0 14px}
+#out .sum{white-space:pre-wrap;font-size:13.5px}
+.states{flex-wrap:wrap}
+.states button[data-v="na"][aria-pressed="true"]{background:var(--wash);color:var(--ink-soft);border-color:var(--border-firm)}
+.tag.na{background:var(--wash);color:var(--ink-soft)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media print{
+ :root{--paper:#fff;--card:#fff}
+ .toolbar,.actions,.steps,.warn,.noprint{display:none!important}
+ .states button[aria-pressed="false"]{display:none}
+ .pass,.findings{box-shadow:none;border-color:#bbb}
+ .item{break-inside:avoid}
+}
+</style>
+</head><body>
+<div class="wrap">
+  <p class="eyebrow">PSYCH 315EE · Evaluation Procedures</p>
+  <h1>Evaluation Proposal Audit</h1>
+  <p class="lede">A checklist for the AI-Assisted Evaluation Proposal Critique. Read the proposal yourself first, one pass at a time. Then log your AI prompt, pick four flaws the AI raised, and test each one against your own audit and the course readings.</p>
+  <p class="warn">This is an individual assignment. Do your own audit and AI critique before talking with anyone. If you share this tool, share the blank file, not your filled-in work.</p>
+  <ol class="steps">
+    <li><b>Step 1. Audit the proposal yourself.</b> Work through Passes 1 to 5 before you open an AI tool. Mark each line Strength, Gap, Flag, or N/A, and note where you saw it (section or page).</li>
+    <li><b>Step 2. Prompt the AI.</b> Log the platform, your exact prompt, and any follow-ups that changed the output. Save the full chat for your appendix.</li>
+    <li><b>Step 3. Test four AI flaws.</b> Summarize each, say agree, partially agree, or disagree, back it up with the proposal and readings, and say why it matters.</li>
+    <li><b>Step 4. Reflect.</b> What the AI did well, where it missed, and how your prompt shaped it. Then copy, download, or print the summary.</li>
+  </ol>
+  <div class="toolbar noprint" role="toolbar" aria-label="File actions">
+    <button class="btn btn-ghost" id="example" type="button">Load worked example</button>
+    <button class="btn btn-ghost" id="export" type="button">Save to file (.json)</button>
+    <label class="btn btn-ghost" style="cursor:pointer">Open saved file<input id="importf" class="sr" type="file" accept=".json,application/json"></label>
+    <button class="btn btn-ghost" id="print" type="button">Print or save as PDF</button>
+  </div>
+  <div class="meta">
+    <label>Proposal<input id="m-prop" type="text" placeholder="Name of the proposal"></label>
+    <label>Reviewer<input id="m-rev" type="text" placeholder="Your name"></label>
+    <label>Date<input id="m-date" type="text" placeholder="Date"></label>
+  </div>
+  <div class="legend">
+    <h2>How to mark each line</h2>
+    <div class="legend-row"><span class="tag ok">Strength</span><span>Addressed, and done well. The assignment asks for strengths too, so note why.</span></div>
+    <div class="legend-row"><span class="tag gap">Gap</span><span>Missing. The proposal never takes it up.</span></div>
+    <div class="legend-row"><span class="tag flag">Flag</span><span>Present but wrong, unsupported, or contradicts itself. These are your strongest findings.</span></div>
+    <div class="legend-row"><span class="tag na">N/A</span><span>Does not apply to this proposal. Say why in the note.</span></div>
+  </div>
+  <h2 class="sec-h">Step 1. Your own audit</h2>
+  <div id="passes"></div>
+  <h2 class="sec-h">Step 2. AI prompt log</h2>
+  <section class="pass"><div class="accent" style="background:var(--rust)"></div><div class="pad">
+    <label for="ai-plat">AI platform</label><input id="ai-plat" data-k="aiPlat" type="text" placeholder="e.g. ChatGPT, Claude, Gemini, Copilot">
+    <label for="ai-sub">Subscription based?</label><select id="ai-sub" data-k="aiSub"><option value="">Choose</option><option>Yes, paid subscription</option><option>No, free tier</option><option>Institutional license</option></select>
+    <label for="ai-date">Date you ran it</label><input id="ai-date" data-k="aiDate" type="date">
+    <label for="ai-url">Platform URL</label><input id="ai-url" data-k="aiUrl" type="text" placeholder="https://chat.openai.com/">
+    <label for="ai-prompt">Exact prompt</label><textarea id="ai-prompt" data-k="aiPrompt" placeholder="Paste the exact prompt you used"></textarea>
+    <label for="ai-follow">Follow-up prompts that changed the output</label><textarea id="ai-follow" data-k="aiFollow" placeholder="Paste each one, in order"></textarea>
+    <label>APA 7 reference, built from the fields above</label>
+    <div class="cite" id="cite" aria-live="polite"></div>
+    <p class="hint" style="margin-top:8px">Check the company and version label against the platform before you use it. Attach the full chat text as an appendix.</p>
+  </div></section>
+  <h2 class="sec-h">Step 3. Four AI flaws, tested</h2>
+  <p class="hint" style="margin:-6px 0 14px">Pick substantive flaws, not wording nits. Link each one to a line from your Step 1 audit. That is where your evidence starts.</p>
+  <div id="aiflaws"></div>
+  <h2 class="sec-h">Step 4. Reflection on AI use</h2>
+  <section class="pass"><div class="accent" style="background:var(--sage)"></div><div class="pad" id="refl"></div></section>
+  <section class="findings">
+    <h2>Summary</h2>
+    <p class="aim">Your strengths, gaps, and flags by pass, plus your tested AI flaws. Copy or download includes the AI log and reflection too.</p>
+    <div class="tally" id="tally"></div>
+    <div id="out"></div>
+    <div class="actions">
+      <button class="btn btn-primary" id="copy" type="button">Copy summary</button>
+      <button class="btn btn-ghost" id="dltxt" type="button">Download as text</button>
+      <button class="btn btn-ghost" id="reset" type="button">Clear all</button>
+    </div>
+    <p class="hint" id="copymsg" role="status" aria-live="polite" style="margin-top:10px"></p>
+  </section>
+  <p class="foot">Passes 1 and 2 come from Weeks 3 and 4, Pass 3 from Week 7, Pass 4 from Weeks 7 and 9, Pass 5 from Weeks 4 and 5. Your work saves automatically in this browser on this device only. Use Save to file to back it up or move it to another computer. Works offline. Nothing is sent anywhere.</p>
+</div>
+<script>
+const PASSES = [
+  {
+    n: "Pass one",
+    title: "Describe the program",
+    color: "var(--indigo)",
+    source: "Week 3 · Thomas &amp; Campbell Ch. 7 · CDC Step 2",
+    aim: "Before anything else, check whether the proposal says clearly what the program is and how it is supposed to work. Most downstream problems start here.",
+    items: [
+      ["Is the need the program addresses stated clearly?", "Not the population's deficits. The problem the program exists to solve."],
+      ["Is the long-term desired impact named in terms you could recognize if you saw it?", "Watch for abstractions that no measure could reach."],
+      ["Are the key target groups identified?", "Who the program is for, specifically."],
+      ["Are all the groups who must take action named, not just participants?", "Staff, families, schools, funded organizations, the steering committee."],
+      ["Are short-term outcomes stated as outcomes rather than activities?", "Attending a session is an activity. Changing because of it is an outcome."],
+      ["Are the program's activities listed?", "What actually happens, in what order, how often."],
+      ["Is the program logic explicit?", "The causal story. How activity A is supposed to produce outcome B."],
+      ["Are program resources and inputs named?", "Staff, money, space, partners, volunteer time."],
+      ["Is there a logic model or an approved alternative visual?", "A narrative description is not a logic model."],
+      ["Are assumptions, contextual factors, and external influences identified?", "What has to be true for this to work, and what outside the program could move the outcome."]
+    ]
+  },
+  {
+    n: "Pass two",
+    title: "Focus the evaluation questions",
+    color: "var(--sky)",
+    source: "Week 4 · Thomas &amp; Campbell Ch. 10 · CDC Step 3",
+    aim: "Take each key evaluation question on its own and hold it against the characteristics of a good question. A weak question cannot be rescued by a strong method.",
+    items: [
+      ["Does each question align with what the funder or client actually needs?", "Check it against the stated purpose, not against what is interesting."],
+      ["Is each question clear, specific, and well defined?", "Could two evaluators read it the same way."],
+      ["Is each question answerable with data that can realistically be collected?", "Not in principle. Here, with this program, in this timeline."],
+      ["Is each question realistic given the program's life-cycle stage?", "A young program supports process and short-term outcome questions."],
+      ["Are the questions reasonable in number and scope?", "Too few can be as bad as too many if each one is doing too much."],
+      ["Does the question language match the logic model's language?", "If the logic model says short-term outcomes, the question should too."],
+      ["What type is each question?", "Program theory, context, relevance, process, outcome, impact, cost, or sustainability."],
+      ["If any question is an impact question, is the program mature enough to carry it?", "Impact questions are usually for mature programs."],
+      ["Are the questions stated consistently everywhere they appear?", "Check the narrative against the crosswalk table. They often drift."]
+    ]
+  },
+  {
+    n: "Pass three",
+    title: "Choose and defend the design",
+    color: "var(--sage)",
+    source: "Week 7 · Thomas &amp; Campbell Ch. 11 · Mertens &amp; Wilson Ch. 9 · Lemire",
+    aim: "The design is chosen for the question and the context, not for the evaluator's preference. Run it against the eight practical considerations, then check what it is honestly able to claim.",
+    items: [
+      ["Is the design named explicitly, defined in plain terms, and justified?", "Write it, define it, justify it. For a client audience, not a methods seminar."],
+      ["Time. Does the timeline support the design?", "Including consent, IRB, and the lag before an outcome could appear."],
+      ["Cost. Can the evaluation be funded at this scale, and is the budget broken down?", "A single number with no line items is not a budget."],
+      ["Participant burden. How many items, how long, how often?", "These are people being served, not research volunteers who signed up."],
+      ["Funder requirements. Is the evaluation responsive to what the funder needs?", "Including what they need in order to keep funding the work."],
+      ["Fit. Do the design's requirements match the intervention?", "No viable comparison sample means an experimental design does not make sense."],
+      ["Balance of investment. Is the evaluation proportionate to the program?", "A relatively simple intervention warrants a relatively simple evaluation."],
+      ["Level of evidence. Is the strength of evidence appropriate to what is being decided?", "Ask what the finding will be used for."],
+      ["Rival hypotheses. Are competing explanations named and addressed?", "Maturation, history, testing, selection, attrition."],
+      ["Is the strongest claim the design can support stated, and does it match what the questions ask?", "If the claim is weaker than the question, change the design or change the question."],
+      ["Whose definition of rigor is being used, and was it set with interest holders?", "Rigor is socially constructed and tends to be defined by those with influence."],
+      ["Fidelity. Are adherence, exposure, quality, and participant responsiveness treated as four separate things?", "Attendance is exposure. Engagement is responsiveness. Conflating them is an error."],
+      ["Is there any plan for program adaptations?", "Adaptations happen. Document them, or you cannot explain your results."]
+    ]
+  },
+  {
+    n: "Pass four",
+    title: "Gather evidence and analyze it",
+    color: "var(--peach)",
+    source: "Week 7 Ch. 12 · Week 9 Ch. 13 · Rossi · Kirkhart · CDC Steps 4 and 5",
+    aim: "Measurement and analysis. Work through the outcome assessment questions first, then the crosswalk, then whether the stated analyses actually fit the data.",
+    items: [
+      ["How. Are the instruments appropriate to the constructs they claim to measure?", "Check reported reliability. Check who the instrument was built for."],
+      ["When. Has enough time passed for the outcome to plausibly appear?", "Measured at the last session is measured immediately."],
+      ["Which outcomes. Are they specified beyond logic model language?", "Logic model language is usually too vague to measure as written."],
+      ["Dosage. Did participants receive enough of the program for the outcome to be reasonable?", "Count the sessions. Then reread the long-term outcome."],
+      ["With whom. Who provides the data, and is that the right source?", "The person best placed to know may not be the person being surveyed."],
+      ["Outputs or outcomes. Is anything counted as an outcome that is really an output?", "Outputs are easier to quantify, which is why they sneak in."],
+      ["Linked to the logic model. Can each measure be traced back to it?", "If there is no logic model, nothing can be."],
+      ["Important and meaningful. Will this data help the client improve or decide anything?", "Appearing in a logic model is not sufficient reason to measure something."],
+      ["Crosswalk. Does every question have two or three sources, and does every source serve a question?", "Too thin, overloaded, and saturated all fail, in different directions."],
+      ["Multicultural validity. Whose assumptions are built into these instruments?", "Kirkhart: methodological, interpersonal, theoretical, experiential, consequential."],
+      ["Are instruments piloted, translated, or adapted for this population?", "Well established is not the same as valid here."],
+      ["Do the named statistical tests match the design and the level of measurement?", "Paired data needs a paired test. Check the table against the narrative."],
+      ["Are effect sizes planned, not just significance?", "Always calculate magnitude. Statistical and meaningful significance are different claims."],
+      ["Is error rate inflation from repeated tests addressed?", "Many measures, many subgroups, no correction."],
+      ["Is disaggregation planned, including beyond demographics?", "By dosage and by implementation quality, not only by who people are."],
+      ["Is there a codebook or inter-rater plan for qualitative data?", "Consistency across coders is the whole point."],
+      ["Is there a data management plan?", "Storage, access, privacy, reuse, and what happens to the raw data at the end."]
+    ]
+  },
+  {
+    n: "Pass five",
+    title: "People, ethics, and use",
+    color: "var(--indigo-deep)",
+    source: "Weeks 4 and 5 · Thomas &amp; Campbell Ch. 2 · JCSEE · AEA · CDC Steps 1 and 6",
+    aim: "Ask the three ethical sensitivity questions of every arrangement in the proposal. Who is harmed by this decision, who is left out, and how do power and culture matter here.",
+    items: [
+      ["Are interest holders identified across all the categories?", "Primary and secondary, direct and indirect, internal and external."],
+      ["Where does each group sit on the Monitor to Empower continuum?", "Count who only receives information and who actually shares decisions."],
+      ["Who decided the evaluation's scope, and on what evidence?", "A scope set by one party's assertion is not a scope."],
+      ["Is there a hidden agenda?", "An evaluation set up mainly to justify a decision someone already made."],
+      ["Symbolic contracting. Does the proposal use participatory or equity language it never operationalizes?", "Naming a theory is not applying it."],
+      ["Role conflict. Is anyone asked to be both supportive coach and objective judge?", "Check who collects the data about whom."],
+      ["Autonomy. Is consent genuinely voluntary, and in a language the consenting party reads?", "Who hands out the form, and who is in the room."],
+      ["Beneficence and non-maleficence. Who could be harmed by this design?", "Participants, staff, and the organizations being rated."],
+      ["Justice. Are burden and benefit fairly distributed?", "Who does the unpaid work, and who gets the findings."],
+      ["Who is left out of the results?", "The people who supplied the data often are."],
+      ["Reporting optics. Could the reporting plan mask poor results?", "Selective inclusion, length, timing, and who can approve release."],
+      ["Is there a formal agreement?", "Data ownership, authorship, release terms, and whether review means comment or veto."],
+      ["Run it against all five standards.", "Utility, feasibility, propriety, accuracy, and evaluation accountability."]
+    ]
+  }
+];
+
+const KEY = "ep-audit-v2";
+const LABEL = { ok: "Strength", gap: "Gap", flag: "Flag", na: "N/A" };
+const VERDICTS = ["", "Agree", "Partially agree", "Disagree"];
+const REFL = [
+  ["rWell", "What did the AI do particularly well?"],
+  ["rMiss", "Where did it struggle, miss course concepts, or make inaccurate or unsupported recommendations?"],
+  ["rPrompt", "How did your prompt shape the quality of the critique?"],
+  ["rRevise", "Would you revise your prompt now? How, and why?"],
+  ["rUse", "When is AI a useful tool for evaluators, and when is evaluator judgment essential?"]
+];
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+if (!state.flaws) state.flaws = [{}, {}, {}, {}];
+function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+const $ = id => document.getElementById(id);
+const strip = s => { const d = document.createElement("div"); d.innerHTML = s; return d.textContent; };
+
+function el(tag, attrs, kids) {
+  const e = document.createElement(tag);
+  Object.entries(attrs || {}).forEach(([k, v]) => {
+    if (k === "text") e.textContent = v; else if (k === "html") e.innerHTML = v; else e.setAttribute(k, v);
+  });
+  (kids || []).forEach(k => e.appendChild(k));
+  return e;
+}
+
+function build() {
+  const host = $("passes");
+  PASSES.forEach((p, pi) => {
+    const sec = el("section", { class: "pass" });
+    const accent = el("div", { class: "accent" }); accent.style.background = p.color; sec.appendChild(accent);
+    const head = el("div", { class: "pass-head" });
+    head.appendChild(el("div", { html: '<p class="pass-n">' + p.n + '</p><h3 style="font-size:21px;margin:0 0 6px">' + p.title + '</h3><p class="source">' + p.source + '</p><p class="aim">' + p.aim + '</p>' }));
+    head.appendChild(el("div", { class: "count", id: "cnt-" + pi }));
+    sec.appendChild(head);
+    p.items.forEach((it, ii) => {
+      const id = pi + "." + ii;
+      const row = el("div", { class: "item", id: "row-" + id });
+      row.appendChild(el("div", { html: '<p class="q">' + it[0] + '</p><p class="hint">' + it[1] + '</p>' }));
+      const states = el("div", { class: "states", role: "group", "aria-label": "Mark: " + strip(it[0]) });
+      ["ok", "gap", "flag", "na"].forEach(v => {
+        const b = el("button", { type: "button", "data-v": v, "aria-pressed": "false", text: LABEL[v] });
+        b.addEventListener("click", () => {
+          const s = state[id] = state[id] || {};
+          s.v = s.v === v ? null : v;
+          save(); paint(id); render();
+        });
+        states.appendChild(b);
+      });
+      row.appendChild(states);
+      const note = el("textarea", { class: "note", id: "note-" + id, rows: "1", placeholder: "Where in the proposal (section or page), and what you found", "aria-label": "Note for: " + strip(it[0]) });
+      note.addEventListener("input", () => { (state[id] = state[id] || {}).n = note.value; save(); render(); });
+      row.appendChild(note);
+      sec.appendChild(row);
+    });
+    host.appendChild(sec);
+  });
+
+  // AI flaws
+  const fh = $("aiflaws");
+  const opts = ['<option value="">None picked</option>'];
+  PASSES.forEach((p, pi) => p.items.forEach((it, ii) => opts.push('<option value="' + pi + "." + ii + '">' + (pi + 1) + "." + (ii + 1) + " " + strip(it[0]).slice(0, 90) + '</option>')));
+  for (let f = 0; f < 4; f++) {
+    const sec = el("section", { class: "pass" });
+    const a = el("div", { class: "accent" }); a.style.background = "var(--rust)"; sec.appendChild(a);
+    const pad = el("div", { class: "pad", html:
+      '<h3>AI flaw ' + (f + 1) + '</h3>' +
+      '<label for="f' + f + 's">AI output critique (brief summary of what the AI said)</label><textarea id="f' + f + 's" data-f="' + f + '" data-x="s"></textarea>' +
+      '<label for="f' + f + 'm">Matches my audit line</label><select id="f' + f + 'm" data-f="' + f + '" data-x="m">' + opts.join("") + '</select>' +
+      '<label for="f' + f + 'v">My evaluation of the AI critique</label><select id="f' + f + 'v" data-f="' + f + '" data-x="v">' + VERDICTS.map(v => '<option value="' + v + '">' + (v || "Choose") + '</option>').join("") + '</select>' +
+      '<label for="f' + f + 'e">Evidence and justification (proposal section, readings, standards, competencies, ethics)</label><textarea id="f' + f + 'e" data-f="' + f + '" data-x="e"></textarea>' +
+      '<label for="f' + f + 'i">Implications (quality, feasibility, utility, ethics, credibility, use) and how I would strengthen it</label><textarea id="f' + f + 'i" data-f="' + f + '" data-x="i"></textarea>'
+    });
+    sec.appendChild(pad); fh.appendChild(sec);
+  }
+  fh.querySelectorAll("[data-f]").forEach(x => {
+    const ev = x.tagName === "SELECT" ? "change" : "input";
+    x.addEventListener(ev, () => { state.flaws[x.dataset.f][x.dataset.x] = x.value; save(); render(); });
+  });
+
+  const rh = $("refl");
+  REFL.forEach(([k, q]) => {
+    rh.appendChild(el("label", { for: "r-" + k, text: q }));
+    rh.appendChild(el("textarea", { id: "r-" + k, "data-k": k }));
+  });
+
+  document.querySelectorAll("[data-k]").forEach(x => {
+    const ev = x.tagName === "SELECT" ? "change" : "input";
+    x.addEventListener(ev, () => { state[x.dataset.k] = x.value; save(); render(); });
+  });
+  ["prop", "rev", "date"].forEach(k => {
+    $("m-" + k).addEventListener("input", e => { state["meta-" + k] = e.target.value; save(); render(); });
+  });
+}
+
+function fill() {
+  PASSES.forEach((p, pi) => p.items.forEach((it, ii) => paint(pi + "." + ii)));
+  ["prop", "rev", "date"].forEach(k => { $("m-" + k).value = state["meta-" + k] || ""; });
+  document.querySelectorAll("[data-k]").forEach(x => { x.value = state[x.dataset.k] || ""; });
+  document.querySelectorAll("[data-f]").forEach(x => { x.value = (state.flaws[x.dataset.f] || {})[x.dataset.x] || ""; });
+}
+
+function paint(id) {
+  const s = state[id] || {};
+  const row = $("row-" + id);
+  if (!row) return;
+  row.querySelectorAll(".states button").forEach(b => b.setAttribute("aria-pressed", String(s.v === b.dataset.v)));
+  row.classList.toggle("answered", !!s.v);
+  const note = $("note-" + id);
+  if (note.value !== (s.n || "")) note.value = s.n || "";
+}
+
+function vendor(plat) {
+  const p = (plat || "").toLowerCase();
+  if (p.includes("chatgpt") || p.includes("gpt")) return "OpenAI";
+  if (p.includes("claude")) return "Anthropic";
+  if (p.includes("gemini")) return "Google";
+  if (p.includes("copilot")) return "Microsoft";
+  if (p.includes("grok")) return "xAI";
+  return "[Company]";
+}
+function citation() {
+  const plat = (state.aiPlat || "").trim();
+  if (!plat) return "Fill in the platform to build the reference.";
+  const d = state.aiDate ? new Date(state.aiDate + "T12:00") : null;
+  const yr = d ? d.getFullYear() : "n.d.";
+  const ver = d ? d.toLocaleDateString("en-US", { month: "long", day: "numeric" }) + " version" : "version";
+  const name = plat.split(/[,(]/)[0].trim();
+  return vendor(plat) + ". (" + yr + "). " + name + " (" + ver + ") [Large language model]. " + (state.aiUrl || "[URL]") + "\nIn text: (" + vendor(plat) + ", " + yr + ")";
+}
+
+function hitsFor(pi, want) {
+  const out = [];
+  PASSES[pi].items.forEach((it, ii) => {
+    const s = state[pi + "." + ii] || {};
+    if (want.includes(s.v)) out.push({ v: s.v, q: strip(it[0]), n: (s.n || "").trim(), id: (pi + 1) + "." + (ii + 1) });
+  });
+  return out;
+}
+
+function render() {
+  let c = { ok: 0, gap: 0, flag: 0, na: 0 }, total = 0;
+  PASSES.forEach((p, pi) => {
+    let done = 0;
+    p.items.forEach((it, ii) => { total++; const v = (state[pi + "." + ii] || {}).v; if (v) { done++; c[v]++; } });
+    $("cnt-" + pi).textContent = done + " of " + p.items.length;
+  });
+  const fl = state.flaws.filter(f => f.s && f.v && f.e).length;
+  $("tally").innerHTML = '<span>' + (c.ok + c.gap + c.flag + c.na) + ' of ' + total + ' reviewed</span><span>' + c.ok + ' strengths</span><span>' + c.gap + ' gaps</span><span>' + c.flag + ' flags</span><span>' + fl + ' of 4 AI flaws done</span>';
+  $("cite").textContent = citation();
+  const out = $("out");
+  out.innerHTML = "";
+  let any = false;
+  PASSES.forEach((p, pi) => {
+    const hits = hitsFor(pi, ["ok", "gap", "flag"]);
+    if (!hits.length) return;
+    any = true;
+    out.appendChild(el("p", { class: "grp", text: strip(p.title) }));
+    const ul = el("ul");
+    hits.forEach(x => {
+      const d = el("div", { class: "txt", text: x.id + " " + x.q });
+      if (x.n) d.appendChild(el("span", { class: "n", text: x.n }));
+      ul.appendChild(el("li", {}, [el("span", { class: "tag " + x.v, text: LABEL[x.v] }), d]));
+    });
+    out.appendChild(ul);
+  });
+  if (state.flaws.some(f => f.s)) {
+    any = true;
+    out.appendChild(el("p", { class: "grp", text: "AI flaws tested" }));
+    out.appendChild(el("div", { class: "sum", text: flawText() }));
+  }
+  if (!any) out.innerHTML = '<p class="empty">Nothing marked yet. Work one pass at a time and your findings will collect here.</p>';
+}
+
+function flawText() {
+  return state.flaws.map((f, i) => {
+    if (!f.s) return "";
+    let s = "AI flaw " + (i + 1) + ": " + f.s.trim() + "\n";
+    if (f.m) { const [pi, ii] = f.m.split(".").map(Number); s += "  Matches my audit " + (pi + 1) + "." + (ii + 1) + ": " + strip(PASSES[pi].items[ii][0]) + " [" + (LABEL[(state[f.m] || {}).v] || "unmarked") + "]\n"; }
+    if (f.v) s += "  My evaluation: " + f.v + "\n";
+    if (f.e) s += "  Evidence: " + f.e.trim() + "\n";
+    if (f.i) s += "  Implications: " + f.i.trim() + "\n";
+    return s;
+  }).filter(Boolean).join("\n");
+}
+
+function asText() {
+  let s = "Evaluation proposal audit: " + (state["meta-prop"] || "Proposal") + "\n";
+  if (state["meta-rev"]) s += "Reviewer: " + state["meta-rev"] + "\n";
+  if (state["meta-date"]) s += "Date: " + state["meta-date"] + "\n";
+  s += "\nSTEP 1. MY AUDIT\n\n";
+  PASSES.forEach((p, pi) => {
+    const hits = hitsFor(pi, ["ok", "gap", "flag"]);
+    if (hits.length) s += strip(p.title).toUpperCase() + "\n" + hits.map(x => "  [" + LABEL[x.v] + "] " + x.id + " " + x.q + (x.n ? "\n      " + x.n : "")).join("\n") + "\n\n";
+  });
+  s += "STEP 2. AI USE\n";
+  if (state.aiPlat) s += "  Platform: " + state.aiPlat + (state.aiSub ? " (" + state.aiSub + ")" : "") + "\n";
+  if (state.aiPrompt) s += "  Prompt: " + state.aiPrompt.trim() + "\n";
+  if (state.aiFollow) s += "  Follow-ups: " + state.aiFollow.trim() + "\n";
+  s += "  Reference: " + citation() + "\n\n";
+  s += "STEP 3. AI FLAWS TESTED\n" + (flawText() || "  None yet.") + "\n\n";
+  s += "STEP 4. REFLECTION\n";
+  REFL.forEach(([k, q]) => { if (state[k]) s += "  " + q + "\n    " + state[k].trim() + "\n"; });
+  return s.trim();
+}
+
+function msg(t) { $("copymsg").textContent = t; setTimeout(() => { $("copymsg").textContent = ""; }, 3000); }
+function download(name, text, type) {
+  const a = el("a", { href: URL.createObjectURL(new Blob([text], { type })), download: name });
+  document.body.appendChild(a); a.click(); a.remove();
+}
+function fname(ext) { return ((state["meta-prop"] || "evaluation-audit").replace(/[^\w-]+/g, "-").slice(0, 40)) + "-audit." + ext; }
+
+$("copy").addEventListener("click", async () => {
+  const text = asText();
+  try { await navigator.clipboard.writeText(text); msg("Copied. Paste it into your draft."); }
+  catch (err) {
+    const ta = el("textarea"); ta.value = text; ta.style.position = "fixed"; ta.style.left = "-9999px";
+    document.body.appendChild(ta); ta.select();
+    let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
+    ta.remove();
+    msg(ok ? "Copied. Paste it into your draft." : "Copy was blocked. Use Download as text instead.");
+  }
+});
+$("dltxt").addEventListener("click", () => download(fname("txt"), asText(), "text/plain"));
+$("export").addEventListener("click", () => download(fname("json"), JSON.stringify(state, null, 1), "application/json"));
+$("importf").addEventListener("change", e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const d = JSON.parse(r.result);
+      if (typeof d !== "object" || !d) throw 0;
+      if (!confirm("Replace what is on screen with this saved file?")) return;
+      state = d; if (!Array.isArray(state.flaws)) state.flaws = [{}, {}, {}, {}];
+      save(); fill(); render(); msg("Opened " + f.name);
+    } catch (x) { alert("That file could not be read. Pick a .json file saved from this tool."); }
+    e.target.value = "";
+  };
+  r.readAsText(f);
+});
+$("print").addEventListener("click", () => window.print());
+$("reset").addEventListener("click", () => {
+  if (!confirm("Clear everything, including your AI log and reflection? Save to file first if you want a copy.")) return;
+  state = { flaws: [{}, {}, {}, {}] }; save(); fill(); render();
+});
+$("example").addEventListener("click", () => {
+  const has = Object.keys(state).some(k => k !== "flaws") || state.flaws.some(f => Object.keys(f).length);
+  if (has && !confirm("Load the worked example? This replaces what is on screen. Save to file first if you want to keep it.")) return;
+  state = JSON.parse(JSON.stringify(EXAMPLE)); save(); fill(); render(); window.scrollTo(0, 0);
+});
+
+const EXAMPLE = {
+  "meta-prop": "WORKED EXAMPLE: Northside Teen Mentoring (made up)",
+  "meta-rev": "Sample reviewer",
+  "meta-date": "Sample",
+  "0.0": { v: "ok", n: "Sec 1: names the problem as rising 9th grade course failure at two partner schools, with district data." },
+  "0.4": { v: "flag", n: "Sec 2: 'students attend 10 sessions' is listed as a short-term outcome. That is an activity or output." },
+  "0.6": { v: "gap", n: "No causal story linking weekly mentoring to grades. Why would this work?" },
+  "0.8": { v: "gap", n: "Only a narrative description. No logic model or visual." },
+  "1.3": { v: "flag", n: "Sec 3, EQ3 asks whether the program 'causes' higher graduation rates. Program is in year one." },
+  "1.8": { v: "flag", n: "EQ2 in the narrative says 'engagement', the crosswalk says 'attendance'. They drift." },
+  "2.0": { v: "flag", n: "Sec 4 calls it 'quasi-experimental' but there is no comparison group. It is a one-group pre-post." },
+  "2.8": { v: "gap", n: "No mention of maturation or history. Grades change across a school year anyway." },
+  "2.11": { v: "flag", n: "Sec 4: fidelity is measured only by attendance. That is exposure, not adherence, quality, or responsiveness (Lemire et al., 2023)." },
+  "2.12": { v: "gap", n: "No plan to document adaptations, even though mentors are volunteers who will tailor sessions (Mark, 2022)." },
+  "3.1": { v: "flag", n: "Post-survey at the last session. Grades are the outcome and need at least a semester to move." },
+  "3.11": { v: "ok", n: "Sec 5: paired t-test on pre-post GPA fits the design they actually have." },
+  "3.12": { v: "gap", n: "Significance only. No effect sizes planned." },
+  "4.0": { v: "ok", n: "Sec 6: lists students, families, mentors, school staff, and the funder." },
+  "4.5": { v: "flag", n: "Mentors collect the engagement surveys from their own mentees. Coach and judge at once." },
+  "4.6": { v: "gap", n: "Consent form is English only. Proposal says 40% of families speak Spanish at home." },
+  aiPlat: "ChatGPT",
+  aiSub: "No, free tier",
+  aiDate: "2026-10-30",
+  aiUrl: "https://chat.openai.com/",
+  aiPrompt: "You are an experienced program evaluator reviewing a proposal for a graduate course. Using the CDC Framework, the Program Evaluation Standards, and the AEA Guiding Principles, identify the five most serious design flaws. For each one, quote the section, explain why it matters, and suggest a fix. Do not list strengths.",
+  aiFollow: "Focus more on whether the design can support the causal claims in the evaluation questions.",
+  flaws: [
+    { s: "The design cannot support EQ3's causal claim about graduation because there is no comparison group.", m: "2.9", v: "Agree", e: "Sec 4 labels the design quasi-experimental, but it is a one-group pre-post. Rossi, Lipsey and Henry (2018) say impact estimates need a credible counterfactual. Thomas and Campbell (2021, Ch. 11) tie design choice to the question.", i: "Overclaiming hurts credibility and could mislead the funder. I would change EQ3 to a short-term outcome question, or add a matched comparison school." },
+    { s: "The proposal should use an RCT, randomizing students to mentoring.", m: "2.5", v: "Disagree", e: "It ignores fit and balance of investment from Week 7. Two schools and volunteer mentors make randomization hard and possibly unethical if mentoring is a known good. Demby et al. (2020) show how much partnership work real-world RCTs need.", i: "Following this advice would raise cost and burden beyond what a year-one program warrants. A stronger design is a comparison group plus implementation data." },
+    { s: "Fidelity monitoring is weak.", m: "2.11", v: "Partially agree", e: "Right that it is weak, but the AI said to add more attendance tracking. Attendance is exposure. Lemire et al. (2023) treat adherence, exposure, quality, and responsiveness as separate.", i: "Without quality and responsiveness data, a null result cannot be explained. Add a short mentor log and a session observation sample." },
+    { s: "Consent procedures do not address language access.", m: "4.6", v: "Agree", e: "The proposal notes 40% Spanish speaking homes but provides English consent only. This conflicts with propriety standards and the AEA principle on respect for people.", i: "Consent would not be truly informed, and the sample would skew. Translate and back-translate the forms and have a bilingual staff member available." }
+  ],
+  rWell: "Spotted the design and causal claim mismatch quickly and quoted the right section.",
+  rMiss: "Recommended an RCT without checking feasibility or fit. Treated attendance as fidelity. Missed the role conflict with mentors collecting data.",
+  rPrompt: "Asking only for flaws gave a one-sided list. Naming the CDC Framework helped it organize, but it did not use course readings it had not seen.",
+  rRevise: "Yes. I would paste in the Week 7 practical considerations and ask it to weigh feasibility before recommending a design.",
+  rUse: "Useful for a fast first scan and for catching inconsistencies. Evaluator judgment is essential for context, feasibility, ethics, and which flaws matter most to this client."
+};
+
+build(); fill(); render();
+</script>
+</body></html>
