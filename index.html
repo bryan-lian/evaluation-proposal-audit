@@ -98,8 +98,22 @@ h1 { font-size: clamp(25px, 5vw, 33px); font-weight: 700; line-height: 1.15; let
 .strip-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 9px; }
 .strip-head h2 { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
 .strip-head .pct { font-size: 13.5px; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
-.strip { display: flex; gap: 10px; flex-wrap: wrap; }
-.strip-grp { display: flex; gap: 3px; }
+.strip { display: grid; }
+.map-row { display: flex; gap: 12px; align-items: center; padding: 6px 0; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.map-row:first-child { border-top: none; padding-top: 0; }
+.map-jump { font: inherit; font-size: 14.5px; font-weight: 600; text-align: left; background: none; border: none;
+  color: var(--ink); cursor: pointer; padding: 4px 7px; border-radius: 6px; flex: 1 1 210px; min-width: 0; }
+.map-jump:hover { background: var(--wash); color: var(--accent); }
+.map-jump:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.map-jump .mc { display: block; font-size: 12.5px; font-weight: 500; color: var(--ink-faint);
+  font-variant-numeric: tabular-nums; margin-top: 1px; }
+.strip-grp { display: flex; gap: 3px; flex: 0 0 auto; }
+.pass-foot { padding: 11px 21px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: space-between;
+  background: var(--wash); border-top: 1px solid var(--border); }
+.pass-foot button { font: inherit; font-size: 13.5px; font-weight: 500; background: none; border: none;
+  color: var(--accent); cursor: pointer; padding: 4px 6px; border-radius: 6px; }
+.pass-foot button:hover { text-decoration: underline; }
+.pass-foot button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .cell { width: 13px; height: 18px; border-radius: 3px; background: var(--blank-mk); border: none; padding: 0; cursor: pointer; }
 .cell:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .cell.ok { background: var(--ok-mk); } .cell.gap { background: var(--gap-mk); }
@@ -249,7 +263,7 @@ tr.hard td { border-bottom-color: var(--border-firm); }
 
   <div class="strip-box" id="stripbox">
     <div class="strip-head">
-      <h2>Coverage</h2>
+      <h2>Passes</h2>
       <span class="pct" id="pct"></span>
     </div>
     <div class="strip" id="strip"></div>
@@ -401,7 +415,7 @@ function build() {
   host.textContent = "";
   PASSES.forEach((p, pi) => {
     const sec = document.createElement("section");
-    sec.className = "pass";
+    sec.className = "pass"; sec.id = "pass-" + pi;
 
     const head = document.createElement("div");
     head.className = "pass-head";
@@ -449,6 +463,26 @@ function build() {
       row.appendChild(note);
       sec.appendChild(row);
     });
+
+    const foot = document.createElement("div"); foot.className = "pass-foot";
+    const up = document.createElement("button");
+    up.type = "button"; up.textContent = "Back to top";
+    up.addEventListener("click", goTop);
+    foot.appendChild(up);
+    const nxt = document.createElement("button"); nxt.type = "button";
+    if (pi < PASSES.length - 1) {
+      nxt.textContent = "Next: " + PASSES[pi + 1].title + " →";
+      nxt.addEventListener("click", () => goPass(pi + 1));
+    } else {
+      nxt.textContent = "Findings →";
+      nxt.addEventListener("click", () => {
+        const f = document.getElementById("findings");
+        if (f) f.scrollIntoView({ block: "start", behavior: "smooth" });
+      });
+    }
+    foot.appendChild(nxt);
+    sec.appendChild(foot);
+
     host.appendChild(sec);
   });
   ids().forEach(paint);
@@ -510,10 +544,31 @@ document.addEventListener("keydown", (e) => {
 });
 
 /* ---------------- coverage strip ---------------- */
+function goPass(pi) {
+  const s = document.getElementById("pass-" + pi);
+  if (s) s.scrollIntoView({ block: "start", behavior: "smooth" });
+}
+function goTop() { window.scrollTo({ top: 0, behavior: "smooth" }); }
+
 function strip() {
   const host = document.getElementById("strip");
   host.textContent = "";
   PASSES.forEach((p, pi) => {
+    const rowEl = document.createElement("div"); rowEl.className = "map-row";
+
+    let shown = 0, done = 0;
+    p.items.forEach((it, ii) => { if (visible(pi, ii)) { shown++; if (markOf(state, pi + "." + ii)) done++; } });
+
+    const jump = document.createElement("button");
+    jump.type = "button"; jump.className = "map-jump";
+    jump.textContent = p.title;
+    const mc = document.createElement("span"); mc.className = "mc";
+    mc.textContent = p.n + " · " + done + " of " + shown + " reviewed";
+    jump.appendChild(mc);
+    jump.setAttribute("aria-label", "Go to " + p.title + ". " + done + " of " + shown + " reviewed.");
+    jump.addEventListener("click", () => goPass(pi));
+    rowEl.appendChild(jump);
+
     const g = document.createElement("div"); g.className = "strip-grp";
     p.items.forEach((it, ii) => {
       if (!visible(pi, ii)) return;
@@ -521,7 +576,7 @@ function strip() {
       const v = markOf(state, id);
       const b = document.createElement("button");
       b.type = "button"; b.className = "cell" + (v ? " " + v : "");
-      b.title = p.title + " — " + it[0] + (v ? " — " + LABEL[v] : " — not reviewed");
+      b.title = it[0] + (v ? " — " + LABEL[v] : " — not reviewed");
       b.setAttribute("aria-label", b.title);
       b.addEventListener("click", () => {
         const r = document.getElementById("row-" + id);
@@ -529,7 +584,8 @@ function strip() {
       });
       g.appendChild(b);
     });
-    host.appendChild(g);
+    rowEl.appendChild(g);
+    host.appendChild(rowEl);
   });
 }
 
